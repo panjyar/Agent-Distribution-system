@@ -359,23 +359,3 @@ Jack,9876543219,Referral from Alice
 1. Update VITE_API_URL to production backend URL
 2. Build: `npm run build`
 3. Deploy dist folder to Netlify, Vercel, or similar
-
-## 📝 License
-
-This project is created for educational purposes as part of a MERN Stack Developer assessment.
-
-## 👨‍💻 Author
-
-Created for MERN Stack Developer Machine Test
-
-## 🙏 Acknowledgments
-
-- MongoDB for database
-- Express.js team
-- React team
-- Vite team
-- All open-source contributors
-
----
-
-**Need Help?** Check the troubleshooting section or review the code comments for detailed explanations.
