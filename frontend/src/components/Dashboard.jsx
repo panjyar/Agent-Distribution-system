@@ -8,16 +8,24 @@ import DistributedLists from './DistributedLists';
 function Dashboard() {
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [adminEmail, setAdminEmail] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+    } else {
+      // Get admin email if stored
+      const email = localStorage.getItem('adminEmail');
+      if (email) {
+        setAdminEmail(email);
+      }
     }
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('adminEmail');
     navigate('/login');
   };
 
@@ -32,7 +40,14 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>Agent Management System</h1>
+        <div>
+          <h1>Admin Dashboard</h1>
+          {adminEmail && (
+            <p style={{ color: '#666', fontSize: '14px', marginTop: '5px' }}>
+              Logged in as: {adminEmail}
+            </p>
+          )}
+        </div>
         <button onClick={handleLogout} className="btn btn-logout">
           Logout
         </button>
@@ -45,8 +60,11 @@ function Dashboard() {
         </div>
 
         <div className="card">
-          <h2>All Agents</h2>
-          <AgentList key={`agents-${refreshKey}`} onAgentDeleted={handleAgentAdded} />
+          <h2>My Agents</h2>
+          <AgentList 
+            key={`agents-${refreshKey}`} 
+            onAgentDeleted={handleAgentAdded} 
+          />
         </div>
 
         <div className="card">
@@ -55,7 +73,7 @@ function Dashboard() {
         </div>
 
         <div className="card">
-          <h2>Distributed Data</h2>
+          <h2>Distributed Data to Agents</h2>
           <DistributedLists key={`distributed-${refreshKey}`} />
         </div>
       </div>

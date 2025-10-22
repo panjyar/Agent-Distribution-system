@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { genSalt, hash } from 'bcryptjs';
+import { genSalt, hash, compare } from 'bcryptjs';
 
 const agentSchema = new Schema(
   {
@@ -31,6 +31,22 @@ const agentSchema = new Schema(
       required: [true, 'Please add a password'],
       minlength: 6,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'Admin',
+      required: true,
+    },
+    createdByModel: {
+      type: String,
+      required: true,
+      enum: ['Admin', 'Agent'],
+      default: 'Admin'
+    },
+    parentAgent: {
+      type: Schema.Types.ObjectId,
+      ref: 'Agent',
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -45,5 +61,10 @@ agentSchema.pre('save', async function (next) {
   const salt = await genSalt(10);
   this.password = await hash(this.password, salt);
 });
+
+// Match password method
+agentSchema.methods.matchPassword = async function (enteredPassword) {
+  return await compare(enteredPassword, this.password);
+};
 
 export default model('Agent', agentSchema);

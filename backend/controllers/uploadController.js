@@ -17,8 +17,11 @@ export const uploadAndDistribute = async (req, res) => {
       });
     }
 
-    // Get all agents
-    const agents = await Agent.find().select('_id name email');
+    // Get all agents created by current admin
+    const agents = await Agent.find({ 
+      createdBy: req.admin._id,
+      createdByModel: 'Admin'
+    }).select('_id name email');
 
     if (agents.length === 0) {
       // Delete uploaded file
@@ -68,7 +71,7 @@ export const uploadAndDistribute = async (req, res) => {
       }
 
       // Distribute data among agents
-      const distributedRecords = distributeData(data, agents);
+      const distributedRecords = distributeData(data, agents, req.admin);
 
       // Save to database
       await DistributedData.insertMany(distributedRecords);
@@ -157,7 +160,7 @@ const parseExcel = (filePath) => {
 };
 
 // Distribute data among agents
-const distributeData = (data, agents) => {
+const distributeData = (data, agents, admin) => {
   const distributedRecords = [];
   const agentCount = agents.length;
   const recordsPerAgent = Math.floor(data.length / agentCount);
@@ -182,6 +185,9 @@ const distributeData = (data, agents) => {
           phone: record.phone || '',
           notes: record.notes || '',
           uploadDate: new Date(),
+          distributedBy: admin._id,
+          distributedByModel: 'Admin',
+          distributedByEmail: admin.email,
         });
         currentIndex++;
       }
@@ -191,12 +197,24 @@ const distributeData = (data, agents) => {
   return distributedRecords;
 };
 
-// @desc    Get distributed data
+// @desc    Get distributed data for current admin
 // @route   GET /api/upload/distributed
 // @access  Private
 export const getDistributedData = async (req, res) => {
   try {
-    const distributedData = await DistributedData.find()
+    // Get all agents created by current admin
+    const adminAgents = await Agent.find({ 
+      createdBy: req.admin._id,
+      createdByModel: 'Admin'
+    }).select('_id');
+
+    const agentIds = adminAgents.map(agent => agent._id);
+
+    const distributedData = await DistributedData.find({
+      agentId: { $in: agentIds },
+      distributedBy: req.admin._id,
+      distributedByModel: 'Admin'
+    })
       .sort({ uploadDate: -1 })
       .lean();
 

@@ -31,6 +31,20 @@ const distributedDataSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    distributedBy: {
+      type: Schema.Types.ObjectId,
+      refPath: 'distributedByModel',
+      required: true,
+    },
+    distributedByModel: {
+      type: String,
+      required: true,
+      enum: ['Admin', 'Agent'],
+    },
+    distributedByEmail: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

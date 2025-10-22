@@ -5,10 +5,10 @@ import {
   validatePassword,
 } from '../utils/validators.js';
 
-// @desc    Create new agent
-// @route   POST /api/agents
-// @access  Private
-export const createAgent = async (req, res) => {
+// @desc    Create new sub-agent
+// @route   POST /api/sub-agents
+// @access  Private (Agent)
+export const createSubAgent = async (req, res) => {
   try {
     const { name, email, mobile, password } = req.body;
 
@@ -46,42 +46,43 @@ export const createAgent = async (req, res) => {
       });
     }
 
-    // Check if agent already exists
-    const agentExists = await Agent.findOne({
+    // Check if sub-agent already exists
+    const subAgentExists = await Agent.findOne({
       $or: [{ email }, { mobile }],
     });
 
-    if (agentExists) {
-      const field = agentExists.email === email ? 'email' : 'mobile number';
+    if (subAgentExists) {
+      const field = subAgentExists.email === email ? 'email' : 'mobile number';
       return res.status(409).json({
         success: false,
-        message: `Agent with this ${field} already exists`,
+        message: `Sub-agent with this ${field} already exists`,
       });
     }
 
-    // Create agent
-    const agent = await Agent.create({
+    // Create sub-agent
+    const subAgent = await Agent.create({
       name,
       email,
       mobile,
       password,
-      createdBy: req.admin._id,
-      createdByModel: 'Admin',
+      createdBy: req.agent._id,
+      createdByModel: 'Agent',
+      parentAgent: req.agent._id,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Agent created successfully',
+      message: 'Sub-agent created successfully',
       data: {
-        _id: agent._id,
-        name: agent.name,
-        email: agent.email,
-        mobile: agent.mobile,
-        createdAt: agent.createdAt,
+        _id: subAgent._id,
+        name: subAgent.name,
+        email: subAgent.email,
+        mobile: subAgent.mobile,
+        createdAt: subAgent.createdAt,
       },
     });
   } catch (error) {
-    console.error('Create agent error:', error);
+    console.error('Create sub-agent error:', error);
     
     // Handle mongoose validation errors
     if (error.name === 'ValidationError') {
@@ -97,70 +98,68 @@ export const createAgent = async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
         success: false,
-        message: `Agent with this ${field} already exists`,
+        message: `Sub-agent with this ${field} already exists`,
       });
     }
 
     res.status(500).json({
       success: false,
-      message: error.message || 'Server error while creating agent',
+      message: error.message || 'Server error while creating sub-agent',
     });
   }
 };
 
-// @desc    Get all agents created by current admin
-// @route   GET /api/agents
-// @access  Private
-export const getAgents = async (req, res) => {
+// @desc    Get all sub-agents created by current agent
+// @route   GET /api/sub-agents
+// @access  Private (Agent)
+export const getSubAgents = async (req, res) => {
   try {
-    const agents = await Agent.find({ 
-      createdBy: req.admin._id,
-      createdByModel: 'Admin'
+    const subAgents = await Agent.find({ 
+      parentAgent: req.agent._id 
     }).select('-password').sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      count: agents.length,
-      data: agents,
+      count: subAgents.length,
+      data: subAgents,
     });
   } catch (error) {
-    console.error('Get agents error:', error);
+    console.error('Get sub-agents error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Server error while fetching agents',
+      message: error.message || 'Server error while fetching sub-agents',
     });
   }
 };
 
-// @desc    Delete agent
-// @route   DELETE /api/agents/:id
-// @access  Private
-export const deleteAgent = async (req, res) => {
+// @desc    Delete sub-agent
+// @route   DELETE /api/sub-agents/:id
+// @access  Private (Agent)
+export const deleteSubAgent = async (req, res) => {
   try {
-    const agent = await Agent.findOne({
+    const subAgent = await Agent.findOne({
       _id: req.params.id,
-      createdBy: req.admin._id,
-      createdByModel: 'Admin'
+      parentAgent: req.agent._id
     });
 
-    if (!agent) {
+    if (!subAgent) {
       return res.status(404).json({
         success: false,
-        message: 'Agent not found or you do not have permission to delete this agent',
+        message: 'Sub-agent not found or you do not have permission to delete this sub-agent',
       });
     }
 
-    await agent.deleteOne();
+    await subAgent.deleteOne();
 
     res.json({
       success: true,
-      message: 'Agent deleted successfully',
+      message: 'Sub-agent deleted successfully',
     });
   } catch (error) {
-    console.error('Delete agent error:', error);
+    console.error('Delete sub-agent error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Server error while deleting agent',
+      message: error.message || 'Server error while deleting sub-agent',
     });
   }
 };

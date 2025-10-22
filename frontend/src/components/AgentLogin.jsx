@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { loginAdmin } from '../services/api';
+import { loginAgentAPI } from '../services/api';
 
-function Login() {
+function AgentLogin() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -23,13 +23,14 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await loginAdmin(formData);
+      const response = await loginAgentAPI(formData);
 
       if (response.data.success) {
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('adminEmail', response.data.data.email);
+        localStorage.setItem('agentToken', response.data.data.token);
+        localStorage.setItem('agentName', response.data.data.name);
+        localStorage.setItem('agentEmail', response.data.data.email);
         toast.success('Login successful!');
-        navigate('/dashboard');
+        navigate('/agent-dashboard');
       }
     } catch (error) {
       const message =
@@ -43,7 +44,7 @@ function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Admin Login</h2>
+        <h2>Agent Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -77,13 +78,11 @@ function Login() {
         </form>
 
         <div className="auth-link">
-          Don't have an account? <Link to="/register">Register here</Link>
-          <br />
-          <Link to="/agent-login">Agent Login</Link>
+          <Link to="/login">Admin Login</Link>
         </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default AgentLogin;
