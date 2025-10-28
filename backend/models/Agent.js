@@ -33,7 +33,7 @@ const agentSchema = new Schema(
     },
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: 'Admin',
+      refPath: 'createdByModel',
       required: true,
     },
     createdByModel: {
